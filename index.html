@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>コールセンター研修システム</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            height: 90vh;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .status {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .chat-area {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message.assistant {
+            justify-content: flex-start;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .message.user .message-content {
+            background: #007bff;
+            color: white;
+        }
+
+        .message.assistant .message-content {
+            background: white;
+            color: #333;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin: 0 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 14px;
+        }
+
+        .avatar.user {
+            background: #28a745;
+        }
+
+        .avatar.assistant {
+            background: #17a2b8;
+        }
+
+        .input-area {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .input-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        #messageInput {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        #messageInput:focus {
+            border-color: #007bff;
+        }
+
+        #sendButton {
+            padding: 12px 24px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background 0.3s;
+        }
+
+        #sendButton:hover:not(:disabled) {
+            background: #0056b3;
+        }
+
+        #sendButton:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .typing-indicator {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 16px;
+            background: white;
+            border-radius: 18px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            max-width: 70%;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .typing-dots span {
+            width: 8px;
+            height: 8px;
+            background: #ccc;
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dots span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dots span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+            }
+            30% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .scenario-selector {
+            margin-bottom: 20px;
+        }
+
+        .scenario-selector select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+        }
+
+        .evaluation-panel {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #28a745;
+        }
+
+        .evaluation-panel h3 {
+            color: #28a745;
+            margin-bottom: 15px;
+        }
+
+        .score-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .score-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .score-item h4 {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .score-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+        }
+
+        .overall-score {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .overall-score .score-value {
+            font-size: 36px;
+            color: #28a745;
+        }
+
+        .feedback-section {
+            background: white;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .feedback-section h4 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .feedback-section ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .feedback-section li {
+            padding: 5px 0;
+            font-size: 13px;
+            color: #555;
+        }
+
+        .feedback-section li:before {
+            content: "• ";
+            color: #007bff;
+            font-weight: bold;
+        }
+
+        .config-panel {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .config-panel h4 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .config-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            font-size: 12px;
+        }
+
+        .config-button {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .config-button:hover {
+            background: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 コールセンター研修システム</h1>
+            <div class="status">田中太郎AIとの研修セッション</div>
+        </div>
+
+        <div class="chat-area" id="chatArea">
+            <div class="config-panel" id="configPanel">
+                <h4>⚙️ システム設定</h4>
+                <input type="password" id="openaiApiKey" class="config-input" placeholder="OpenAI API Key を入力">
+                <input type="url" id="n8nWebhookUrl" class="config-input" placeholder="N8N Webhook URL を入力">
+                <button class="config-button" onclick="saveConfig()">設定保存</button>
+                <div style="font-size: 11px; color: #856404; margin-top: 8px;">設定後、この パネルは非表示になります</div>
+            </div>
+
+            <div class="scenario-selector">
+                <select id="scenarioSelect">
+                    <option value="basic">基本的な問い合わせ対応</option>
+                    <option value="complaint">クレーム対応</option>
+                    <option value="technical">技術的問題解決</option>
+                    <option value="billing">料金・請求関連</option>
+                    <option value="cancellation">解約・変更手続き</option>
+                </select>
+            </div>
+
+            <div class="message assistant">
+                <div class="avatar assistant">田中</div>
+                <div class="message-content">
+                    こんにちは！コールセンター研修システムへようこそ。私は田中太郎です。<br><br>
+                    今日はあなたの接客スキル向上のお手伝いをさせていただきます。上記のシナリオを選択して、研修を開始してください。<br><br>
+                    準備ができましたら、「研修開始」とお話しください。
+                </div>
+            </div>
+
+            <div class="typing-indicator" id="typingIndicator">
+                <div class="avatar assistant">田中</div>
+                <div class="typing-dots">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="input-area">
+            <div class="input-container">
+                <input type="text" id="messageInput" placeholder="メッセージを入力してください..." />
+                <button id="sendButton">送信</button>
+            </div>
+        </div>
+
+        <div class="evaluation-panel" id="evaluationPanel">
+            <h3>📊 研修評価結果</h3>
+            <div class="overall-score">
+                <div>総合スコア</div>
+                <div class="score-value" id="overallScore">--</div>
+                <div style="font-size: 14px; color: #666;">/ 25点</div>
+            </div>
+            
+            <div class="score-grid">
+                <div class="score-item">
+                    <h4>対応品質</h4>
+                    <div class="score-value" id="responseQuality">--</div>
+                </div>
+                <div class="score-item">
+                    <h4>コミュニケーション</h4>
+                    <div class="score-value" id="communication">--</div>
+                </div>
+                <div class="score-item">
+                    <h4>問題解決</h4>
+                    <div class="score-value" id="problemSolving">--</div>
+                </div>
+                <div class="score-item">
+                    <h4>プロフェッショナリズム</h4>
+                    <div class="score-value" id="professionalism">--</div>
+                </div>
+                <div class="score-item">
+                    <h4>顧客満足度</h4>
+                    <div class="score-value" id="customerSatisfaction">--</div>
+                </div>
+            </div>
+
+            <div class="feedback-section">
+                <h4>✨ 良かった点</h4>
+                <ul id="strengthsList"></ul>
+            </div>
+
+            <div class="feedback-section">
+                <h4>🎯 改善提案</h4>
+                <ul id="improvementsList"></ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // システム設定
+        let CONFIG = {
+            OPENAI_API_KEY: '',
+            N8N_WEBHOOK_URL: '',
+            API_URL: 'https://api.openai.com/v1/chat/completions'
+        };
+
+        // システム状態
+        let conversationHistory = [];
+        let currentScenario = 'basic';
+        let isTrainingActive = false;
+
+        // シナリオ定義
+        const SCENARIOS = {
+            basic: {
+                name: '基本的な問い合わせ対応',
+                persona: 'あなたは一般的なサービスについて質問する顧客です。丁寧で分かりやすい説明を求めています。',
+                context: '基本的なサービス利用について質問があります。'
+            },
+            complaint: {
+                name: 'クレーム対応',
+                persona: 'あなたは不満を抱えた顧客です。サービスに問題があり、改善を求めています。最初は少し怒っていますが、適切な対応を受けると気持ちが和らぎます。',
+                context: 'サービスで問題が発生し、解決を求めています。'
+            },
+            technical: {
+                name: '技術的問題解決',
+                persona: 'あなたは技術的な問題で困っている顧客です。ITスキルはそれほど高くないため、専門用語は避けて分かりやすく説明してほしいと考えています。',
+                context: '技術的な問題が発生し、解決方法を知りたがっています。'
+            },
+            billing: {
+                name: '料金・請求関連',
+                persona: 'あなたは料金や請求について質問がある顧客です。正確な情報と明確な説明を求めています。',
+                context: '料金体系や請求内容について質問があります。'
+            },
+            cancellation: {
+                name: '解約・変更手続き',
+                persona: 'あなたはサービスの解約や変更を検討している顧客です。手続きの詳細や条件について知りたがっています。引き留めに対しては柔軟に対応します。',
+                context: 'サービスの解約または変更を検討しています。'
+            }
+        };
+
+        // DOM要素
+        const chatArea = document.getElementById('chatArea');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+        const scenarioSelect = document.getElementById('scenarioSelect');
+        const typingIndicator = document.getElementById('typingIndicator');
+        const evaluationPanel = document.getElementById('evaluationPanel');
+        const configPanel = document.getElementById('configPanel');
+
+        // イベントリスナー
+        sendButton.addEventListener('click', sendMessage);
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+        scenarioSelect.addEventListener('change', changeScenario);
+
+        // 設定保存
+        function saveConfig() {
+            const apiKey = document.getElementById('openaiApiKey').value.trim();
+            const webhookUrl = document.getElementById('n8nWebhookUrl').value.trim();
+            
+            if (apiKey) {
+                CONFIG.OPENAI_API_KEY = apiKey;
+                localStorage.setItem('openai_api_key', apiKey);
+            }
+            
+            if (webhookUrl) {
+                CONFIG.N8N_WEBHOOK_URL = webhookUrl;
+                localStorage.setItem('n8n_webhook_url', webhookUrl);
+            }
+            
+            if (apiKey || webhookUrl) {
+                configPanel.style.display = 'none';
+                addMessage('assistant', 'システム設定が完了しました！研修を開始できます。');
+            }
+        }
+
+        // 設定読み込み
+        function loadConfig() {
+            const savedApiKey = localStorage.getItem('openai_api_key');
+            const savedWebhookUrl = localStorage.getItem('n8n_webhook_url');
+            
+            if (savedApiKey) {
+                CONFIG.OPENAI_API_KEY = savedApiKey;
+                document.getElementById('openaiApiKey').value = savedApiKey;
+            }
+            
+            if (savedWebhookUrl) {
+                CONFIG.N8N_WEBHOOK_URL = savedWebhookUrl;
+                document.getElementById('n8nWebhookUrl').value = savedWebhookUrl;
+            }
+            
+            if (savedApiKey && savedWebhookUrl) {
+                configPanel.style.display = 'none';
+            }
+        }
+
+        // メッセージ送信
+        async function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message) return;
+
+            // ユーザーメッセージを表示
+            addMessage('user', message);
+            messageInput.value = '';
+            sendButton.disabled = true;
+
+            // 研修開始チェック
+            if (message.includes('研修開始') || message.includes('開始')) {
+                isTrainingActive = true;
+                addMessage('assistant', `研修を開始します！シナリオ「${SCENARIOS[currentScenario].name}」で進めます。\n\n${SCENARIOS[currentScenario].context}\n\n適切な対応をお願いします。`);
+                sendButton.disabled = false;
+                return;
+            }
+
+            // 研修終了チェック
+            if (message.includes('研修終了') || message.includes('終了')) {
+                await endTraining();
+                return;
+            }
+
+            // AIレスポンス生成
+            showTyping();
+            try {
+                const response = await generateAIResponse(message);
+                hideTyping();
+                addMessage('assistant', response);
+            } catch (error) {
+                hideTyping();
+                addMessage('assistant', 'すみません、システムエラーが発生しました。設定を確認してもう一度お試しください。');
+                console.error('AI Response Error:', error);
+            }
+
+            sendButton.disabled = false;
+        }
+
+        // AIレスポンス生成
+        async function generateAIResponse(userMessage) {
+            if (!CONFIG.OPENAI_API_KEY) {
+                return 'OpenAI API Keyが設定されていません。上部の設定パネルで設定してください。';
+            }
+            
+            if (!isTrainingActive) {
+                return 'まず「研修開始」とお話しください。';
+            }
+
+            return await callOpenAIAPI(userMessage);
+        }
+
+        // OpenAI API呼び出し
+        async function callOpenAIAPI(message) {
+            const scenario = SCENARIOS[currentScenario];
+            const systemPrompt = `あなたは「${scenario.name}」のロールプレイングで顧客を演じています。
+
+ペルソナ: ${scenario.persona}
+
+研修生（コールセンターオペレーター）と会話し、彼らのスキル向上をサポートしてください。リアルな顧客として振る舞い、適切な対応に対しては満足を示し、不適切な対応には改善のヒントを与えてください。
+
+会話は自然で建設的になるよう心がけてください。`;
+
+            const response = await fetch(CONFIG.API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${CONFIG.OPENAI_API_KEY}`
+                },
+                body: JSON.stringify({
+                    model: 'gpt-4o-mini',
+                    messages: [
+                        { role: 'system', content: systemPrompt },
+                        ...conversationHistory.slice(-10),
+                        { role: 'user', content: message }
+                    ],
+                    max_tokens: 500,
+                    temperature: 0.7
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`OpenAI API Error: ${response.status}`);
+            }
+
+            const data = await response.json();
+            return data.choices[0].message.content;
+        }
+
+        // 研修終了・評価実行
+        async function endTraining() {
+            if (conversationHistory.length < 4) {
+                addMessage('assistant', '研修を終了するには、もう少し会話を続けてください。');
+                sendButton.disabled = false;
+                return;
+            }
+
+            addMessage('assistant', '研修お疲れさまでした！評価を生成しています...');
+            
+            try {
+                const evaluationResult = await sendToEvaluationSystem();
+                displayEvaluation(evaluationResult);
+            } catch (error) {
+                console.error('Evaluation Error:', error);
+                addMessage('assistant', '評価システムでエラーが発生しました。しばらく後にもう一度お試しください。');
+            }
+
+            sendButton.disabled = false;
+        }
+
+        // 既存N8N評価システムに送信
+        async function sendToEvaluationSystem() {
+            if (!CONFIG.N8N_WEBHOOK_URL) {
+                // ダミー評価結果
+                return {
+                    overall_score: Math.floor(Math.random() * 8) + 15,
+                    detailed_scores: {
+                        response_quality: Math.floor(Math.random() * 3) + 3,
+                        communication_skills: Math.floor(Math.random() * 3) + 3,
+                        problem_solving: Math.floor(Math.random() * 3) + 3,
+                        professionalism: Math.floor(Math.random() * 3) + 3,
+                        customer_satisfaction: Math.floor(Math.random() * 3) + 3
+                    },
+                    strengths: ['丁寧な対応', '適切な確認', '迅速な対応'],
+                    improvements: ['より具体的な提案', '感情的配慮の向上']
+                };
+            }
+
+            // 会話データを11Labs形式に合わせて変換
+            const conversationData = {
+                data: {
+                    transcript: conversationHistory.map((msg, index) => ({
+                        message: msg.content,
+                        role: msg.role,
+                        timestamp: new Date().toISOString()
+                    })),
+                    metadata: {
+                        call_duration_secs: conversationHistory.length * 30,
+                        scenario: currentScenario
+                    },
+                    conversation_id: `training_${Date.now()}`
+                }
+            };
+
+            const response = await fetch(CONFIG.N8N_WEBHOOK_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(conversationData)
+            });
+
+            return await response.json();
+        }
+
+        // 評価結果表示
+        function displayEvaluation(result) {
+            document.getElementById('overallScore').textContent = result.overall_score;
+            document.getElementById('responseQuality').textContent = result.detailed_scores.response_quality;
+            document.getElementById('communication').textContent = result.detailed_scores.communication_skills;
+            document.getElementById('problemSolving').textContent = result.detailed_scores.problem_solving;
+            document.getElementById('professionalism').textContent = result.detailed_scores.professionalism;
+            document.getElementById('customerSatisfaction').textContent = result.detailed_scores.customer_satisfaction;
+
+            const strengthsList = document.getElementById('strengthsList');
+            strengthsList.innerHTML = '';
+            result.strengths.forEach(strength => {
+                const li = document.createElement('li');
+                li.textContent = strength;
+                strengthsList.appendChild(li);
+            });
+
+            const improvementsList = document.getElementById('improvementsList');
+            improvementsList.innerHTML = '';
+            result.improvements.forEach(improvement => {
+                const li = document.createElement('li');
+                li.textContent = improvement;
+                improvementsList.appendChild(li);
+            });
+
+            evaluationPanel.style.display = 'block';
+            evaluationPanel.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // メッセージ追加
+        function addMessage(role, content) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}`;
+            
+            const avatar = document.createElement('div');
+            avatar.className = `avatar ${role}`;
+            avatar.textContent = role === 'user' ? '研修生' : '田中';
+            
+            const messageContent = document.createElement('div');
+            messageContent.className = 'message-content';
+            messageContent.innerHTML = content.replace(/\n/g, '<br>');
+            
+            if (role === 'user') {
+                messageDiv.appendChild(messageContent);
+                messageDiv.appendChild(avatar);
+            } else {
+                messageDiv.appendChild(avatar);
+                messageDiv.appendChild(messageContent);
+            }
+            
+            chatArea.appendChild(messageDiv);
+            chatArea.scrollTop = chatArea.scrollHeight;
+
+            // 会話履歴に追加
+            conversationHistory.push({
+                role: role === 'user' ? 'user' : 'assistant',
+                content: content
+            });
+        }
+
+        // タイピング表示
+        function showTyping() {
+            typingIndicator.style.display = 'flex';
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+        function hideTyping() {
+            typingIndicator.style.display = 'none';
+        }
+
+        // シナリオ変更
+        function changeScenario() {
+            currentScenario = scenarioSelect.value;
+            if (!isTrainingActive) {
+                addMessage('assistant', `シナリオを「${SCENARIOS[currentScenario].name}」に変更しました。研修開始の際にお声がけください。`);
+            }
+        }
+
+        // 初期化
+        function init() {
+            loadConfig();
+            console.log('コールセンター研修システム初期化完了');
+            console.log('OpenAI API Key設定:', CONFIG.OPENAI_API_KEY ? '設定済み' : '未設定');
+            console.log('N8N Webhook URL:', CONFIG.N8N_WEBHOOK_URL ? '設定済み' : '未設定');
+        }
+
+        // システム開始
+        init();
+    </script>
+</body>
+</html>
