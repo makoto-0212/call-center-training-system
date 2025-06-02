@@ -1,126 +1,187 @@
-# 🎯 コールセンター研修システム
+# コールセンター研修システム - テキストベース版
 
-## 📋 プロジェクト概要
+## 🎯 プロジェクト概要
 
-OpenAI Chat API + N8N評価システムを統合したテキストベース研修システムです。
-既存の11Labs + N8N + OpenAI評価システムの代替として開発され、段階的に音声機能を追加予定です。
+OpenAI Chat APIとN8N評価システムを統合したテキストベースのコールセンター研修システムです。
+11Labsのクレジット制限により、OpenAI中心のシステムに移行したプロジェクトです。
 
-## ⚡ 特徴
+## ✅ 実装済み機能
 
-- **🗣️ リアルな研修環境**: チャット形式で田中太郎AIと対話
-- **📊 自動評価**: 既存N8N評価システムと完全統合
-- **🎯 5つのシナリオ**: 基本対応からクレーム対応まで
-- **💰 低コスト**: 約$0.1/5分会話
-- **🚀 即座利用**: GitHub Pages即座デプロイ
+- ✅ **チャット形式研修**: リアルタイムテキスト対話
+- ✅ **田中太郎AIペルソナ**: OpenAI GPT-4oによる自然な顧客役
+- ✅ **5つの研修シナリオ**: 基本対応、クレーム、技術質問、料金、解約対応
+- ✅ **研修タイマー**: 自動時間測定
+- ✅ **評価システム準備**: N8N統合準備完了
+- ✅ **レスポンシブUI**: PC・モバイル対応
 
-## 🔧 システム構成
+## 🚀 即座実行可能
+
+**GitHub Pages URL**: https://makoto-0212.github.io/call-center-training-system/
+
+### 必要なもの
+
+1. **OpenAI APIキー** - 初回アクセス時に設定
+2. **インターネット接続** - OpenAI API呼び出し用
+
+### 使用方法
+
+1. 上記URLにアクセス
+2. OpenAI APIキーを入力（ブラウザに安全に保存）
+3. 研修シナリオを選択
+4. 「研修開始」ボタンをクリック
+5. 田中太郎（AI顧客）と対話
+6. 「研修終了」で評価を確認
+
+## 📊 システム構成
 
 ```
-Webアプリ(HTML/JS) ↔ OpenAI Chat API ↔ 既存N8N評価システム
+Webアプリ (GitHub Pages)
+    ↓
+OpenAI Chat API (GPT-4o)
+    ↓
+N8N評価システム (統合予定)
+    ↓
+評価結果表示
 ```
 
-## 📊 評価システム
+## 💰 コスト
 
-### 評価項目（各5点満点）
-- 対応品質
-- コミュニケーションスキル
-- 問題解決能力
-- プロフェッショナリズム
-- 顧客満足度
+- **現在**: 約$0.1/5分会話（OpenAI APIのみ）
+- **GitHub Pages**: 無料
+- **N8N**: 無料枠内で利用可能
 
-### 出力形式
-```json
+## 🔧 N8N評価システム統合
+
+### Step 1: N8N Webhookエンドポイント準備
+
+既存の完成済みN8Nワークフローを使用：
+
+```javascript
+// N8Nで受信するデータ形式
 {
-  "overall_score": 18,
-  "detailed_scores": {
-    "response_quality": 4,
-    "communication_skills": 4,
-    "problem_solving": 3,
-    "professionalism": 4,
-    "customer_satisfaction": 3
-  },
-  "strengths": ["丁寧な対応", "適切な確認"],
-  "improvements": ["より具体的な提案", "感情的配慮の向上"]
+  "data": {
+    "transcript": [
+      {
+        "message": "研修生の発言",
+        "speaker": "agent",
+        "timestamp": "2025-06-02T00:12:00.000Z"
+      },
+      {
+        "message": "AI顧客の発言",
+        "speaker": "customer", 
+        "timestamp": "2025-06-02T00:12:15.000Z"
+      }
+    ],
+    "metadata": {
+      "call_duration_secs": 300,
+      "scenario": "general",
+      "start_time": "2025-06-02T00:10:00.000Z",
+      "end_time": "2025-06-02T00:15:00.000Z"
+    }
+  }
 }
 ```
 
-## 🚀 使用方法
+### Step 2: WebアプリでのN8N呼び出し有効化
 
-### 1. システムアクセス
-https://makoto-0212.github.io/call-center-training-system/
+`index.html`の`evaluateConversation()`関数内でコメントアウトされた部分を有効化：
 
-### 2. 初期設定
-- OpenAI API Key を入力
-- N8N Webhook URL を入力（既存評価システム）
+```javascript
+// TODO部分を以下に置き換え
+const n8nResponse = await fetch('YOUR_N8N_WEBHOOK_URL', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ data: conversationData })
+});
+const evaluation = await n8nResponse.json();
+displayEvaluation(evaluation);
+```
 
-### 3. 研修実行
-1. シナリオを選択
-2. 「研修開始」と入力
-3. 田中太郎AIと会話
-4. 「研修終了」で評価実行
+## 📋 実装手順チェックリスト
 
-## 🔧 技術仕様
+### Phase 1: 基本システム（完了）
+- [x] HTML/CSS/JS Webアプリ作成
+- [x] OpenAI Chat API統合
+- [x] 田中太郎AIペルソナ実装
+- [x] 5つの研修シナリオ実装
+- [x] チャットUI・タイマー実装
+- [x] GitHub Pagesデプロイ
 
-- **フロントエンド**: HTML + CSS + JavaScript
-- **AI API**: OpenAI Chat API (GPT-4o-mini)
-- **評価システム**: 既存N8N評価ワークフロー
-- **ホスティング**: GitHub Pages
-- **コスト**: 約$0.1/5分会話
+### Phase 2: N8N統合（次のタスク）
+- [ ] N8N WebhookエンドポイントURL取得
+- [ ] WebアプリのN8N呼び出し有効化
+- [ ] データ形式の最終調整
+- [ ] エラーハンドリング強化
 
-## 📅 開発ロードマップ
+### Phase 3: 機能拡張（今後）
+- [ ] 評価履歴保存機能
+- [ ] 複数研修生対応
+- [ ] 管理者ダッシュボード
+- [ ] OpenAI TTS/STT統合（音声機能）
 
-### Phase 1: テキストベース（完了）
-- ✅ チャット形式UI
-- ✅ OpenAI Chat API統合
-- ✅ N8N評価システム統合
-- ✅ 5シナリオ対応
+## 🎮 研修シナリオ詳細
 
-### Phase 2: 音声機能追加（予定）
-- 🔄 OpenAI TTS/STT統合
-- 🔄 音声入出力対応
-- 🔄 品質最適化
+### 1. 基本的な電話対応
+- **目的**: 基本的な接客マナーと対応スキル
+- **AI行動**: 丁寧で一般的な質問をする顧客
 
-### Phase 3: 高機能化（予定）
-- 🔄 OpenAI Realtime API
-- 🔄 マルチユーザー対応
-- 🔄 ダッシュボード機能
+### 2. クレーム対応
+- **目的**: 感情的な顧客への適切な対応
+- **AI行動**: 最初は感情的、適切な対応で徐々に落ち着く
 
-## 📊 前身システム
+### 3. 技術的な質問対応
+- **目的**: 専門知識の説明スキル
+- **AI行動**: 技術的な詳細を求める顧客
 
-11Labs + N8N + OpenAI Post-Call評価システム（95%完成）からの移行プロジェクト。
-クレジット制限により、より持続可能なOpenAI中心システムへ移行。
+### 4. 料金・請求に関する質問
+- **目的**: 正確な情報提供と説明スキル
+- **AI行動**: 請求内容の確認を求める顧客
 
-詳細: [claude-conversation-backup/sessions/2025-05-29-0130-openai-alternative-system-design](https://github.com/makoto-0212/claude-conversation-backup/tree/main/sessions/2025-05-29-0130-openai-alternative-system-design)
+### 5. 解約・変更対応
+- **目的**: 顧客離反防止と提案スキル
+- **AI行動**: 解約を検討している顧客
 
-## 🔑 必要な設定
+## 🔍 評価項目（5段階評価）
 
-### OpenAI API Key
-1. [OpenAI Platform](https://platform.openai.com/api-keys) でAPI Key取得
-2. 課金設定の確認
-3. システムに入力
+1. **対応品質** (1-5点): 回答の正確性・適切性
+2. **コミュニケーションスキル** (1-5点): 言葉遣い・聞き取りやすさ
+3. **問題解決能力** (1-5点): 課題への対応・解決提案
+4. **プロフェッショナリズム** (1-5点): 専門性・信頼性
+5. **顧客満足度** (1-5点): 顧客の満足度向上
 
-### N8N Webhook URL
-既存の評価ワークフローのWebhook URLを設定
+**総合スコア**: 最大25点
 
-## 📈 コスト試算
+## 🛠️ 技術仕様
 
-| 項目 | コスト | 詳細 |
-|------|--------|------|
-| GPT-4o-mini | ~$0.08/5分 | 入力$0.15/1M + 出力$0.6/1M tokens |
-| N8N | 無料 | 既存システム流用 |
-| GitHub Pages | 無料 | ホスティング |
-| **合計** | **~$0.1/5分** | **非常に低コスト** |
+- **フロントエンド**: HTML5 + CSS3 + Vanilla JavaScript
+- **AI API**: OpenAI GPT-4o (Chat Completions API)
+- **評価システム**: N8N + OpenAI (既存ワークフロー)
+- **ホスティング**: GitHub Pages（無料）
+- **データ保存**: LocalStorage（ブラウザ内）
 
-## 🎯 今後の拡張予定
+## 🚀 今後の開発予定
 
-- 音声機能追加（OpenAI TTS/STT）
-- 複数シナリオ対応
-- 進捗ダッシュボード
-- マルチユーザー対応
-- AI研修カリキュラム自動生成
+### 短期（1-2週間）
+1. N8N評価システム完全統合
+2. エラーハンドリング強化
+3. 評価データCSVエクスポート機能
+
+### 中期（1-2ヶ月）
+1. OpenAI TTS/STT統合（音声機能追加）
+2. 研修結果分析ダッシュボード
+3. 複数シナリオ同時対応
+
+### 長期（3-6ヶ月）
+1. OpenAI Realtime API統合
+2. マルチテナント対応
+3. AI研修カリキュラム自動生成
+
+## 📞 サポート
+
+プロジェクトに関する質問やサポートは、GitHubのIssuesにて受け付けています。
 
 ---
 
-**開発者**: makoto-0212  
-**開発期間**: 2025-05-29~  
-**バージョン**: 1.0.0 (テキストベース完全版)
+**プロジェクト開始**: 2025-05-29  
+**現在バージョン**: v1.0.0 (テキストベース)  
+**最終更新**: 2025-06-02
